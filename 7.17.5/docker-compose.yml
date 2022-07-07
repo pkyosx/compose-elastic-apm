@@ -5,13 +5,14 @@ networks:
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.5
-    container_name: es_7
+    hostname: es_7
     environment:
       - TZ=Asia/Taipei
       - "discovery.type=single-node"
       - network.host=0.0.0.0
       - http.host=0.0.0.0
       - xpack.security.enabled=false
+      - xpack.security.authc.api_key.enabled=false
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -26,11 +27,12 @@ services:
       - elk_7
   kibana:
     image: docker.elastic.co/kibana/kibana:7.17.5
-    container_name: kibana_7
+    hostname: kibana_7
     environment:
       - TZ=Asia/Taipei
       - ELASTICSEARCH_HOSTS=http://es_7:9200
-      - xpack.apm.enabled=true
+      - XPAC_APM_ENABLED=true
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=fhjskloppd678ehkdfdlliverpoolfcr
     ports:
       - "5601:5601"
     volumes:
@@ -47,12 +49,12 @@ services:
         condition: service_healthy
   apm-server:
     image: docker.elastic.co/apm/apm-server:7.17.5
-    container_name: apm_7
+    hostname: apm_7
     cap_add: [ "CHOWN", "DAC_OVERRIDE", "SETGID", "SETUID" ]
     cap_drop: [ "ALL" ]
     ports:
       - "8200:8200"
-    command: apm-server -e -E apm-server.rum.enabled=true -E setup.kibana.host=kibana_7:5601 -E apm-server.kibana.enabled=true -E apm-server.kibana.host=kibana_7:5601 -E output.elasticsearch.hosts=["es_7:9200"] # ["es01:9200"] results the same
+    command: apm-server -e -E apm-server.rum.enabled=true -E setup.kibana.host=kibana_7:5601 -E apm-server.kibana.enabled=true -E apm-server.kibana.host=kibana_7:5601 -E output.elasticsearch.hosts=["es_7:9200"]
     networks:
       - elk_7
     healthcheck:
